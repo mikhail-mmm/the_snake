@@ -30,7 +30,7 @@ APPLE_COLOR = (255, 0, 0)
 SNAKE_COLOR = (0, 255, 0)
 
 # Скорость движения змейки:
-SPEED = 20
+SPEED = 8
 
 # Настройка игрового окна:
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -168,6 +168,22 @@ class Apple(GameObject):
         pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
+class InedibleObject(Apple):
+    """Класс для несъедобных объектов."""
+
+    def __init__(self):
+        self.body_color = (150, 75, 0)
+        self.position = self.randomize_position()
+
+
+class Rock(Apple):
+    """Класс для несъедобных объектов."""
+
+    def __init__(self):
+        self.body_color = (128, 128, 128)
+        self.position = self.randomize_position()
+
+
 def handle_keys(game_object):
     """Функция обработки действий пользователя."""
     for event in pygame.event.get():
@@ -190,19 +206,33 @@ def main():
     # Тут нужно создать экземпляры классов.
     snake = Snake()
     apple = Apple()
+    rock = Rock()
+    inedible_object = InedibleObject()
 
     while True:
+        speed = SPEED
         screen.fill(BOARD_BACKGROUND_COLOR)
-        clock.tick(SPEED)
+        clock.tick(speed)
         handle_keys(snake)
         snake.update_direction()
         snake.move(apple.position)
 
         if apple.position == snake.positions[0]:
             apple.position = apple.randomize_position()
+            speed += 1
+        elif rock.position == snake.positions[0]:
+            rock.position = rock.randomize_position()
+            snake.reset()
+            speed = SPEED
+        elif inedible_object.position == snake.positions[0]:
+            inedible_object.position = inedible_object.randomize_position()
+            if speed != 1 and snake.length != 1:
+                speed -= 1
 
         snake.draw()
+        rock.draw()
         apple.draw()
+        inedible_object.draw()
         pygame.display.update()
 
 
