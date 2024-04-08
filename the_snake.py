@@ -30,7 +30,7 @@ APPLE_COLOR = (255, 0, 0)
 SNAKE_COLOR = (0, 255, 0)
 
 # Скорость движения змейки:
-SPEED = 8
+SPEED = 10
 
 # Настройка игрового окна:
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -74,29 +74,33 @@ class Snake(GameObject):
             self.direction = self.next_direction
             self.next_direction = None
 
-    def move(self, apple_position):
+    def move(self, apple_position, inedible_object_position):
         """Метод, отвечающий за изменение положения змейки на игровом поле."""
         head_position = self.get_head_position()
-
         new_position = self.get_new_position(head_position)
 
         if new_position in self.positions:
             self.reset()
+
+        if self.length != 1:
+            if new_position == apple_position:
+                self.positions.insert(0, new_position)
+                self.length += 1
+            elif new_position == inedible_object_position:
+                self.positions.insert(0, new_position)
+                self.positions.pop()
+                self.last = self.positions.pop()
+                self.length -= 1
+            else:
+                self.positions.insert(0, new_position)
+                self.last = self.positions.pop()
         else:
-            if self.length == 1:
-                self.last = head_position
-                if new_position == apple_position:
-                    self.positions.insert(0, new_position)
-                    self.length += 1
-                else:
-                    self.positions.insert(0, new_position)
-                    self.last = self.positions.pop()
             if new_position == apple_position:
                 self.positions.insert(0, new_position)
                 self.length += 1
             else:
                 self.positions.insert(0, new_position)
-                self.positions.pop()
+                self.last = self.positions.pop()
 
     def get_new_position(self, head_position):
         """Функция для получения новой позиции головы змейки."""
@@ -122,7 +126,7 @@ class Snake(GameObject):
 
     def draw(self):
         """Метод draw класса Snake."""
-        for position in self.positions[:-1]:
+        for position in self.positions:
             rect = (pygame.Rect(position, (GRID_SIZE, GRID_SIZE)))
             pygame.draw.rect(screen, self.body_color, rect)
             pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
@@ -153,13 +157,18 @@ class Apple(GameObject):
 
     def __init__(self):
         self.body_color = (255, 0, 0)
-        self.position = self.randomize_position()
+        self.snake_start_position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        self.position = self.randomize_position(self.snake_start_position)
 
-    def randomize_position(self):
+    def randomize_position(self, snake_positions):
         """Функция для получения случайной координаты на игровом поле."""
-        width = randint(0, GRID_WIDTH - 1) * GRID_SIZE
-        height = randint(0, GRID_HEIGHT - 1) * GRID_SIZE
-        return (width, height)
+        while True:
+            width = randint(0, GRID_WIDTH - 1) * GRID_SIZE
+            height = randint(0, GRID_HEIGHT - 1) * GRID_SIZE
+            object_position = (width, height)
+            if object_position not in snake_positions:
+                break
+        return object_position
 
     def draw(self):
         """Метод draw класса Apple."""
@@ -173,7 +182,8 @@ class InedibleObject(Apple):
 
     def __init__(self):
         self.body_color = (150, 75, 0)
-        self.position = self.randomize_position()
+        self.snake_start_position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        self.position = self.randomize_position(self.snake_start_position)
 
 
 class Rock(Apple):
@@ -181,7 +191,8 @@ class Rock(Apple):
 
     def __init__(self):
         self.body_color = (128, 128, 128)
-        self.position = self.randomize_position()
+        self.snake_start_position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        self.position = self.randomize_position(self.snake_start_position)
 
 
 def handle_keys(game_object):
@@ -207,32 +218,32 @@ def main():
     snake = Snake()
     apple = Apple()
     rock = Rock()
-    inedible_object = InedibleObject()
+    inedible = InedibleObject()
+    speed = SPEED
 
     while True:
-        speed = SPEED
         screen.fill(BOARD_BACKGROUND_COLOR)
         clock.tick(speed)
         handle_keys(snake)
         snake.update_direction()
-        snake.move(apple.position)
+        snake.move(apple.position, inedible.position)
 
         if apple.position == snake.positions[0]:
-            apple.position = apple.randomize_position()
+            apple.position = apple.randomize_position(snake.positions)
             speed += 1
         elif rock.position == snake.positions[0]:
-            rock.position = rock.randomize_position()
+            rock.position = rock.randomize_position(snake.positions)
             snake.reset()
-            speed = SPEED
-        elif inedible_object.position == snake.positions[0]:
-            inedible_object.position = inedible_object.randomize_position()
-            if speed != 1 and snake.length != 1:
+            speed = 10
+        elif inedible.position == snake.positions[0]:
+            inedible.position = inedible.randomize_position(snake.positions)
+            if speed != 10 or snake.length != 1:
                 speed -= 1
 
         snake.draw()
-        rock.draw()
         apple.draw()
-        inedible_object.draw()
+        rock.draw()
+        inedible.draw()
         pygame.display.update()
 
 
