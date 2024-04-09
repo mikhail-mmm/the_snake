@@ -150,6 +150,7 @@ class Snake(GameObject):
         self.positions = [self.position]
         self.length = 1
         self.direction = choice([UP, DOWN, RIGHT, LEFT])
+        self.last = None
 
 
 class Apple(GameObject):
@@ -187,7 +188,7 @@ class InedibleObject(Apple):
 
 
 class Rock(Apple):
-    """Класс для несъедобных объектов."""
+    """Класс объекта камень."""
 
     def __init__(self):
         self.body_color = (128, 128, 128)
@@ -214,7 +215,6 @@ def handle_keys(game_object):
 
 def main():
     """Функция запускающая игру и определяющая ее логику."""
-    # Тут нужно создать экземпляры классов.
     snake = Snake()
     apple = Apple()
     rock = Rock()
