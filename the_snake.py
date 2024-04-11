@@ -41,31 +41,29 @@ pygame.display.set_caption('Змейка')
 # Настройка времени:
 clock = pygame.time.Clock()
 
+# Стартовая позиция змейки:
+SNAKE_START_POSITION = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+
 
 # Тут опишите все классы игры.
 class GameObject:
     """Основной класс игровых объектов."""
 
-    def __init__(self) -> None:
-        self.position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-        self.body_color = None
+    def __init__(self, body_color=None) -> None:
+        self.body_color = body_color
 
     def draw(self) -> None:
         """Объявление метода draw для родительского класса."""
-        pass
 
 
 class Snake(GameObject):
     """Класс для объектов змейка."""
 
-    length = 1
-    direction = RIGHT
-    next_direction = None
-
-    def __init__(self):
-        self.position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+    def __init__(self, body_color=(0, 255, 0)):
+        self.position = SNAKE_START_POSITION
         self.positions = [self.position]
-        self.body_color = (0, 255, 0)
+        self.body_color = body_color
+        self.length = 1
         self.last = None
 
     def update_direction(self):
@@ -131,10 +129,10 @@ class Snake(GameObject):
             pygame.draw.rect(screen, self.body_color, rect)
             pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
-        # Отрисовка головы змейки
-        head_rect = pygame.Rect(self.positions[0], (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(screen, self.body_color, head_rect)
-        pygame.draw.rect(screen, BORDER_COLOR, head_rect, 1)
+        # # Отрисовка головы змейки
+        # head_rect = pygame.Rect(self.positions[0], (GRID_SIZE, GRID_SIZE))
+        # pygame.draw.rect(screen, self.body_color, head_rect)
+        # pygame.draw.rect(screen, BORDER_COLOR, head_rect, 1)
 
         # Затирание последнего сегмента
         if self.last:
@@ -158,7 +156,7 @@ class Apple(GameObject):
 
     def __init__(self):
         self.body_color = (255, 0, 0)
-        self.snake_start_position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        self.snake_start_position = SNAKE_START_POSITION
         self.position = self.randomize_position(self.snake_start_position)
 
     def randomize_position(self, snake_positions):
@@ -183,8 +181,7 @@ class InedibleObject(Apple):
 
     def __init__(self):
         self.body_color = (150, 75, 0)
-        self.snake_start_position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-        self.position = self.randomize_position(self.snake_start_position)
+        self.position = self.randomize_position(SNAKE_START_POSITION)
 
 
 class Rock(Apple):
@@ -192,8 +189,7 @@ class Rock(Apple):
 
     def __init__(self):
         self.body_color = (128, 128, 128)
-        self.snake_start_position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-        self.position = self.randomize_position(self.snake_start_position)
+        self.position = self.randomize_position(SNAKE_START_POSITION)
 
 
 def handle_keys(game_object):
