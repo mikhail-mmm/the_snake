@@ -1,8 +1,8 @@
-from random import choice, randint
+from random import choice
 
-import pygame
+import pygame as pg
 
-pygame.init()
+pg.init()
 
 # Константы для размеров поля и сетки:
 SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
@@ -17,19 +17,26 @@ LEFT = (-20, 0)
 RIGHT = (20, 0)
 
 USER_ACTIONS = {
-    (pygame.K_UP, UP): UP,
-    (pygame.K_UP, RIGHT): UP,
-    (pygame.K_UP, LEFT): UP,
-    (pygame.K_DOWN, DOWN): DOWN,
-    (pygame.K_DOWN, LEFT): DOWN,
-    (pygame.K_DOWN, RIGHT): DOWN,
-    (pygame.K_LEFT, LEFT): LEFT,
-    (pygame.K_LEFT, UP): LEFT,
-    (pygame.K_LEFT, DOWN): LEFT,
-    (pygame.K_RIGHT, RIGHT): RIGHT,
-    (pygame.K_RIGHT, UP): RIGHT,
-    (pygame.K_RIGHT, DOWN): RIGHT,
+    (pg.K_UP, UP): UP,
+    (pg.K_UP, RIGHT): UP,
+    (pg.K_UP, LEFT): UP,
+    (pg.K_DOWN, DOWN): DOWN,
+    (pg.K_DOWN, LEFT): DOWN,
+    (pg.K_DOWN, RIGHT): DOWN,
+    (pg.K_LEFT, LEFT): LEFT,
+    (pg.K_LEFT, UP): LEFT,
+    (pg.K_LEFT, DOWN): LEFT,
+    (pg.K_RIGHT, RIGHT): RIGHT,
+    (pg.K_RIGHT, UP): RIGHT,
+    (pg.K_RIGHT, DOWN): RIGHT,
 }
+
+# Все ячейка поля:
+ALL_CELLS = set(
+    (x, y)
+    for x in range(0, SCREEN_WIDTH, 20)
+    for y in range(0, SCREEN_HEIGHT, 20)
+)
 
 # Цвет фона - черный:
 BOARD_BACKGROUND_COLOR = (0, 0, 0)
@@ -53,13 +60,13 @@ ROCK_COLOR = (128, 128, 128)
 SPEED = 10
 
 # Настройка игрового окна:
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
+screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
 
 # Заголовок окна игрового поля:
-pygame.display.set_caption('Змейка')
+pg.display.set_caption('Змейка')
 
 # Настройка времени:
-clock = pygame.time.Clock()
+clock = pg.time.Clock()
 
 # Стартовая позиция змейки:
 SNAKE_START_POSITION = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
@@ -74,19 +81,20 @@ class GameObject:
 
     def randomize_position(self, snake_positions):
         """Функция для получения случайной координаты на игровом поле."""
-        while True:
-            width = randint(0, GRID_WIDTH - 1) * GRID_SIZE
-            height = randint(0, GRID_HEIGHT - 1) * GRID_SIZE
-            object_position = (width, height)
-            if object_position not in snake_positions:
-                break
-        return object_position
+        random_cell = choice(tuple(ALL_CELLS - set(snake_positions)))
+        return random_cell
 
     def draw(self):
         """Метод draw родительского класса."""
-        rect = pygame.Rect(self.position, (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(screen, self.body_color, rect)
-        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
+        raise NotImplementedError(
+            f'Определите метод draw() в {self.__class__.__name__}',
+        )
+
+    def paint_one_cell(self):
+        """Метод закрашивания одной ячейки игрового поля."""
+        rect = pg.Rect(self.position, (GRID_SIZE, GRID_SIZE))
+        pg.draw.rect(screen, self.body_color, rect)
+        pg.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 class Snake(GameObject):
@@ -97,7 +105,7 @@ class Snake(GameObject):
         self.positions = [self.position]
         self.body_color = body_color
         self.next_direction = None
-        self.direction = LEFT
+        self.direction = RIGHT
 
     def update_direction(self):
         """Метод обновления направления после нажатия на кнопку."""
@@ -107,31 +115,29 @@ class Snake(GameObject):
     def move(self):
         """Метод, отвечающий за изменение положения змейки на игровом поле."""
         head_position = self.get_head_position()
-        self.position = self.get_new_position(head_position)
-
-    def get_new_position(self, head_position):
-        """Функция для получения новой позиции головы змейки."""
-        new_position = (
+        self.position = (
             head_position[0] + self.direction[0],
             head_position[1] + self.direction[1],
         )
 
-        if new_position[0] < 0:
-            new_position = (620, new_position[1])
-        elif new_position[0] > 639:
-            new_position = (0, new_position[1])
-        elif new_position[1] < 0:
-            new_position = (new_position[0], 460)
-        elif new_position[1] > 479:
-            new_position = (new_position[0], 0)
+        if self.position[0] < 0:
+            self.position = (620, self.position[1])
+        elif self.position[0] > 639:
+            self.position = (0, self.position[1])
+        elif self.position[1] < 0:
+            self.position = (self.position[0], 460)
+        elif self.position[1] > 479:
+            self.position = (self.position[0], 0)
 
-        return new_position
+    def draw(self):
+        """Метод draw дочернего класса."""
+        self.paint_one_cell()
 
     def pain_over(self, last):
         """Затирание последнего сегмента"""
         if last:
-            last_rect = pygame.Rect(last, (GRID_SIZE, GRID_SIZE))
-            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
+            last_rect = pg.Rect(last, (GRID_SIZE, GRID_SIZE))
+            pg.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
 
     def get_head_position(self):
         """Функция для получения положения головы змейки."""
@@ -151,6 +157,10 @@ class Apple(GameObject):
         self.body_color = APPLE_COLOR
         self.position = self.randomize_position(position)
 
+    def draw(self):
+        """Метод draw дочернего класса."""
+        self.paint_one_cell()
+
 
 class InedibleObject(GameObject):
     """Класс для несъедобных объектов."""
@@ -158,6 +168,10 @@ class InedibleObject(GameObject):
     def __init__(self, position=SNAKE_START_POSITION):
         self.body_color = INEDIBLE_OBJECT_COLOR
         self.position = self.randomize_position(position)
+
+    def draw(self):
+        """Метод draw дочернего класса."""
+        self.paint_one_cell()
 
 
 class Rock(GameObject):
@@ -167,14 +181,18 @@ class Rock(GameObject):
         self.body_color = ROCK_COLOR
         self.position = self.randomize_position(position)
 
+    def draw(self):
+        """Метод draw дочернего класса."""
+        self.paint_one_cell()
+
 
 def handle_keys(game_object):
     """Функция обработки действий пользователя."""
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            pg.quit()
             raise SystemExit
-        if event.type == pygame.KEYDOWN:
+        if event.type == pg.KEYDOWN:
             try:
                 game_object.next_direction = USER_ACTIONS[
                     (event.key, game_object.direction)
@@ -226,7 +244,7 @@ def main():
         rock.draw()
         inedible.draw()
 
-        pygame.display.update()
+        pg.display.update()
 
 
 if __name__ == '__main__':
