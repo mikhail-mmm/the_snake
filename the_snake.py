@@ -16,6 +16,7 @@ DOWN = (0, 20)
 LEFT = (-20, 0)
 RIGHT = (20, 0)
 
+# Возможные реакции на действие пользователя
 USER_ACTIONS = {
     (pg.K_UP, UP): UP,
     (pg.K_UP, RIGHT): UP,
@@ -116,24 +117,15 @@ class Snake(GameObject):
         """Метод, отвечающий за изменение положения змейки на игровом поле."""
         head_position = self.get_head_position()
         self.position = (
-            head_position[0] + self.direction[0],
-            head_position[1] + self.direction[1],
+            (head_position[0] + self.direction[0]) % 640,
+            (head_position[1] + self.direction[1]) % 480,
         )
-
-        if self.position[0] < 0:
-            self.position = (620, self.position[1])
-        elif self.position[0] > 639:
-            self.position = (0, self.position[1])
-        elif self.position[1] < 0:
-            self.position = (self.position[0], 460)
-        elif self.position[1] > 479:
-            self.position = (self.position[0], 0)
 
     def draw(self):
         """Метод draw дочернего класса."""
         self.paint_one_cell()
 
-    def pain_over(self, last):
+    def paint_over(self, last):
         """Затирание последнего сегмента"""
         if last:
             last_rect = pg.Rect(last, (GRID_SIZE, GRID_SIZE))
@@ -233,11 +225,11 @@ def main():
             inedible.position = inedible.randomize_position(snake.positions)
             if len(snake.positions) != 1:
                 snake.positions.insert(0, snake.position)
-                snake.pain_over(snake.positions.pop())
-                snake.pain_over(snake.positions.pop())
+                snake.paint_over(snake.positions.pop())
+                snake.paint_over(snake.positions.pop())
         else:
             snake.positions.insert(0, snake.position)
-            snake.pain_over(snake.positions.pop())
+            snake.paint_over(snake.positions.pop())
 
         snake.draw()
         apple.draw()
