@@ -18,16 +18,12 @@ RIGHT = (20, 0)
 
 # Возможные реакции на действие пользователя
 USER_ACTIONS = {
-    (pg.K_UP, UP): UP,
     (pg.K_UP, RIGHT): UP,
     (pg.K_UP, LEFT): UP,
-    (pg.K_DOWN, DOWN): DOWN,
     (pg.K_DOWN, LEFT): DOWN,
     (pg.K_DOWN, RIGHT): DOWN,
-    (pg.K_LEFT, LEFT): LEFT,
     (pg.K_LEFT, UP): LEFT,
     (pg.K_LEFT, DOWN): LEFT,
-    (pg.K_RIGHT, RIGHT): RIGHT,
     (pg.K_RIGHT, UP): RIGHT,
     (pg.K_RIGHT, DOWN): RIGHT,
 }
@@ -117,8 +113,8 @@ class Snake(GameObject):
         """Метод, отвечающий за изменение положения змейки на игровом поле."""
         head_position = self.get_head_position()
         self.position = (
-            (head_position[0] + self.direction[0]) % 640,
-            (head_position[1] + self.direction[1]) % 480,
+            (head_position[0] + self.direction[0]) % SCREEN_WIDTH,
+            (head_position[1] + self.direction[1]) % SCREEN_HEIGHT,
         )
 
     def draw(self):
